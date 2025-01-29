@@ -1,0 +1,8 @@
+.activities-container {
+  
+    gap: 2rem;
+    padding-top: 20px;
+    justify-content: space-between;
+    margin-left: 300px; /* Adjust for the width of your vertical navbar */
+}
+

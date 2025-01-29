@@ -1,0 +1,9 @@
+.map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh; /* Full height of the viewport */
+    width: 100vw; /* Full width of the viewport */
+    z-index: -1; /* Keep it behind other elements */
+    overflow: hidden;
+}

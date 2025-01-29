@@ -1,0 +1,94 @@
+/* Overlay to cover the entire page */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Transparent black background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensures it's above everything else */
+}
+
+/* Modal card */
+.modal-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    padding: 20px 30px;
+    width: 90%;
+    max-width: 400px; /* Restrict max width */
+    text-align: center;
+    animation: fadeIn 0.3s ease-in-out; /* Smooth fade-in effect */
+}
+
+/* Title styling */
+.modal-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Form elements */
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Spacing between inputs */
+}
+
+/* Label styling */
+.modal-label {
+    font-size: 1rem;
+    text-align: left;
+    color: #444;
+}
+
+/* Select dropdown */
+.modal-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+/* Input field */
+.modal-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+/* Submit button */
+.modal-submit {
+    background: #4caf50;
+    color: white;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.modal-submit:hover {
+    background: #45a049; /* Slightly darker green on hover */
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
