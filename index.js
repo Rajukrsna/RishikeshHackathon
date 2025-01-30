@@ -7,9 +7,14 @@ const app = express();
 app.use(cors());
 const axios = require('axios'); 
 const fetch = require('node-fetch');    
-
+const multer = require("multer");
+const fs = require("fs");
+const sharp = require("sharp");
 app.use(bodyParser.json());
 dotenv.config();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -227,6 +232,114 @@ app.get('/api/restaurants', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch restaurant data.' });
     }
   });
+
+
+
+  const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+app.post("/api/getPoints",  upload.single("photo"), async (req, res) => {
+    const { file } = req;
+    const { category } = req.body;
+
+    if (!file) {
+        return res.status(400).json({ error: "No image file uploaded." });
+    }
+    if (!category) {
+        return res.status(400).json({ error: "No category provided." });
+    }
+
+    
+
+    try {
+        const compressedImage = await sharp(file.buffer)
+        .resize({ width: 800 })  // Resize the image
+        .toFormat("jpeg")
+        .jpeg({ quality: 80 })  // Compress quality
+        .toBuffer();  // Use toBuffer() instead of toFile()
+
+
+        const imageBase64 = compressedImage.toString("base64");
+        // Call AI model to analyze the image
+        const recognizedCategory = await analyzeImageWithAI(imageBase64, category);
+
+            
+        if (recognizedCategory.toLowerCase().includes("yes")) {
+            return res.json({ success: true, message: "Correct category! You earned 10 points.", pointsAwarded: 10 });
+        } else {
+            return res.json({ success: false, message: "Wrong category. Try again!", pointsAwarded: 0 });
+        }
+    } catch (error) {
+        console.error("Error processing image:", error.message);
+        return res.status(500).json({ error: error.message || "Failed to process the image." });
+    }
+});
+
+// Function to call Sambanova AI API for image recognition
+const analyzeImageWithAI = async (imageBase64, category) => {
+    const apiKey = process.env.SAMB_API_KEY;
+    const url = "https://api.sambanova.ai/v1/chat/completions";
+
+    const headers = {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+    };
+    const data = {
+        model: "Llama-3.2-11B-Vision-Instruct",
+        messages: [
+            {
+                role: "user",
+                content: [
+                 {  type: "text",
+                            text: `You are an AI image classification assistant. Your task is to analyze the uploaded image and identify the objects or features it recognizes in the image. 
+                                    Once you've identified the recognized content, compare it to the specified category: ${category}. 
+                                    The output should be structured in the following JSON format.
+
+                                    {
+                                        "recognized_objects": [list of objects/features you recognized in the image],
+                                        "category_match": "Yes" or "No"
+                                    }
+                                    If the image contains objects or features related to the specified category, respond with "Yes" in the "category_match" field. 
+                                    If the image does not relate to the category, respond with "No". 
+                                    
+                                    **Example 1**: 
+                                    If the image contains plants, soil, or trees, and the category is "Planting Trees", you should respond with "Yes".
+                                    
+                                    **Example 2**:
+                                    If the image contains plastic items or waste materials, and the category is "Planting Trees", you should respond with "No", because the content does not match the category.
+                                    
+                                    **Example 3**:
+                                    If the image contains a bicycle, and the category is "Recycle Plastics", you should respond with "No", because a bicycle is not related to recycling plastics.
+                        
+                                     Ensure:
+                                           1. Respond only with the proper JSON structure, no additional text.    `    
+                        
+                 },
+                    {
+                        type: "image_url",
+                        image_url: {
+                            url: `data:image/jpeg;base64,${imageBase64}`,
+                        },
+                    },
+                ],
+            },
+        ],
+        temperature: 0.1,
+        top_p: 0.1,
+    };
+    
+
+    try {
+        const response = await axios.post(url, data, { headers });
+        const recognizedCategory = response.data.choices[0].message.content.trim();
+        //console.log(response)
+        return recognizedCategory;
+    } catch (error) {
+        console.error("Error calling Sambanova API:", error.response?.data || error.message);
+        throw new Error("Error with the AI API request.");
+    }
+};
+
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
